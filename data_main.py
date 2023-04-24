@@ -3,7 +3,7 @@ import plotly.express as px
 import pandas as pd
 import os
 
-#a script that will be ignored by GIT containing cuotnries and their case counts by month
+#a script that will be ignored by GIT containing countries and their case counts by month
 from cases_list import cases_list 
 
 global months, months_d, countries
