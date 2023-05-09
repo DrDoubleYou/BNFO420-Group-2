@@ -8,7 +8,7 @@ from cases_list import cases_list
 
 global months, months_d, countries
 
-jan=['Jan']
+jan=["Jan"]
 feb=["Feb"]
 mar=["Mar"]
 apr=["Apr"]
@@ -23,71 +23,65 @@ dec=["Dec"]
 
 months = [jan, feb, mar, apr, may, jun, jul, aug, sep, oct, nov, dec]
 
-months_d={"jan":"1","feb":"2","mar":"3","apr":"4","may":"5","jun":"6","jul":"7","aug":"8",\
+months_dict={"jan":"1","feb":"2","mar":"3","apr":"4","may":"5","jun":"6","jul":"7","aug":"8",\
           "sep":"9","oct":"10","nov":"11","dec":"12"}
 
 class data():
-    def __init__(self, get_all_countries=False,):
-
-        self.c=0
+    def __init__(self, get_all_countries=False,):          
+        """
+        get_all_countries   > if similar countries from  datasets have not been gathered yet,
+                                runs all functions to gather them if set to True
+        """
+        self.get_all_countries=get_all_countries
         if get_all_countries == True:
-            #run functions to write file of similar countries in misinfo & stringency datasets
+          
+        #run functions to write file of similar countries in misinfo & stringency datasets    
             self.all_countries()
             self.stringency_countries()
             self.misinfo_countries()
             self.sim_countries()
-        
-        else:
-            #if data has already been gathered, just put similar contries in list
-            with open('all_countries.txt',"r") as f:
 
+        #if data has already been gathered, just put similar countries in list
+        #default filename is "all_countries.txt"
+        else:
+            with open('all_countries.txt',"r") as f:
                 self.both  = list(csv.reader(f))
                 for item in self.both[:-1]:
                     self.both[self.both.index(item)]=item[0]
 
     def all_coutnries(self):
-
         """
-        This function extracts all countries from the countries of the world dataset    
+        Extracts all countries from the countries of the world dataset    
         """
 
         #generate list of countries of the world
         self.all_countries=[]
         with open('misinfo\\countries.csv',"r") as f:
-
             reader_obj = csv.reader(f)
-
             for row in list(reader_obj):
                 self.all_countries.append(row[0].strip())
 
     def stringency_countries(self):
-
         """
-        This function extracts all countries from the stringency dataset    
+        Extracts all countries from the stringency dataset    
         """
 
         self.w_countries=set()
         with open('misinfo\\stringency.csv',"r") as f:
-
             reader_obj = csv.reader(f)
-
             for row in list(reader_obj):
                 self.w_countries.add(row[2].strip())
 
     def misinfo_countries(self):
-
         """
-        This function extracts all countries from the misinformation dataset    
+        Extracts all countries from the misinformation dataset    
         """
 
-        #open and parse through the misinformation database
         self.m_countries=set()
         with open('misinfo\\misinfo.csv',"r",encoding="utf8") as f:
-
             reader_obj = csv.reader(f)
-            
             for row in list(reader_obj):
-                print(row[14])
+                    
                 #seperate cells where multuple countries are listed
                 if "," in row[14]:
                     add=row[14].split(",")
@@ -98,59 +92,70 @@ class data():
     def sim_countries(self, print_=False):
 
         """
-        This function determines the countries that are similar between the 
+        Determines the countries that are similar between the 
         misinformation dataset, stringency dataset, and all countries of the 
         world dataset
+        
+        print_      > determines if similar country information is printed 
+        self.both   > a list of countries in both datasets
         """
-
         self.both = []
 
         #determine which/how many countries are similar
         for country in self.w_countries:
             if ((country in self.w_countries) and (country in self.m_countries) and (country in self.all_countries)):
                 self.both.append(country)
-
         if print_==True:
             print(f"Here is a list of all countries that are in both datasets:{self.both}\n\
                    Legnth of this dataset: {len(self.both)} countries")
-
-
-        with open(f'datasets\\similar_countries.txt',"w") as f:
+          
+        #write txt file of all similar countries    
+        with open(f'datasets\\all_countries.txt',"w") as f:
             for country in self.both:
                 f.write(f"{country}")
 
-    def stringency_data(self, country, year):
-
+    def stringency_data(self, country, year):          
+        """
+        Gathers data from the stringency dataset 
+        
+        country     > coutnry that the data will be gathered from
+        year        > year that the data will be gather from
+        """
         stringency = []
-
+          
+        #parse the dataset file, saving country and stringency index value if both the country and 
+        #year are present in the row
         with open('stringency_updated.csv',"r",encoding="utf8") as f:
-            
             reader = list(csv.reader(f))
-
             for row in reader:
-                #if row is the last of a month (where we take out measurement) and for this year is 2020
                 try:
+                    
+                    #if row is the last day of a month (where we take out measurement) year is 2020
                     if ((row[2] == country) and (row[3][:2]!=reader[reader.index(row)+1][3][:2]) and (row[3][-4:]==y)):
                         stringency.append(f"{row[2]}{row[47]}")
                     else:
                         continue
                 except:
                     pass
-        
+        #create list of just stringency index values with the country
         self.stringency_nums=[]
         for item in stringency:
             self.stringency_nums.append(item.replace(country,""))
 
     def misinfo_data(self, country, year, graph=False):
         """
-        This function will  add each misinformation story from each month to its
+        Adds each misinformation story from each month to its
         corresponding country. Set graph to True when calling to display figure
+        
+        country     > coutnry that the data will be gathered from
+        year        > year that the data will be gather from     
+        graph       > determines is graph is printed
         """
-
+          
+        #open and parse misinformation dataset, saving monthly data to
+        #its appropriate list
         with open(f'datasets\\misinfo.csv',"r",encoding="utf8") as f:
-
             reader_obj = csv.reader(f)
-
             for row in list(reader_obj):
                 if country in row[14]:
                     for month in months:
@@ -162,24 +167,25 @@ class data():
                                 [month.append(a) for a in add]
                             else:
                                 month.append(row[14])
+                                        
             # Create the visual
             if graph==True:
                 df = pd.DataFrame(dict(
-
                     group = self.both,
-                    values = [months[6].count(country) for country in self.both]))
+                    values = [months[6].count(country) for country in self.both])
+                    )
 
                 fig = px.bar(df, x = 'group', y = 'values',
                             title = "Number of Misinformation Stories By Country in June",
                             labels = {'group': 'Country', 'value':'Number of Misinformation Stories'},
                             color = 'group')
-                
+                    
+        #save the count of total misinformation stories per country
         self.misinfo_nums=[]
         for month in months:
             self.misinfo_nums.append(str(month.count(country)))
 
     def ex_mort_data(self, country, year):
-
         """
         This function will write the data for excess mortality for the given year
         """
